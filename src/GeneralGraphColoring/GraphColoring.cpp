@@ -303,7 +303,8 @@ namespace ColPack
 		}
                 */
 
-		int i, j;
+		NODE_T i; 
+    EDGE_T j;
 
 		int i_PresentVertex;
 
@@ -6062,9 +6063,9 @@ int GraphColoring::D1_Coloring_OMP(){
     double time1=0, time2=0, totalTime=0;
     long NVer     = m_vi_Vertices.size()-1;  //number of nodes
     //long NEdge    = m_vi_Edges.size()/2;     //number of edges 
-    int *verPtr   = &m_vi_Vertices[0];       //pointer to first vertex
-    int *verInd   = &m_vi_Edges[0];          //pointer to first edge
-    int MaxDegree = m_i_MaximumVertexDegree; //maxDegree
+    EDGE_T *verPtr   = &m_vi_Vertices[0];       //pointer to first vertex
+    NODE_T *verInd   = &m_vi_Edges[0];          //pointer to first edge
+    NODE_T MaxDegree = m_i_MaximumVertexDegree; //maxDegree
     vector<int> vtxColor(NVer, -1);          //uncolored color is -1
 
     // Build a vector of random numbers
@@ -6072,7 +6073,7 @@ int GraphColoring::D1_Coloring_OMP(){
     if( randValues==nullptr) {printf("Not enough memory for array of %ld doubles\n",NVer); exit(1); }
     int seed = 12345;
     srand(seed);
-    for(int i=0; i<NVer; i++) randValues[i]= double(rand())/(RAND_MAX+1.0);
+    for(auto i=0; i<NVer; i++) randValues[i]= double(rand())/(RAND_MAX+1.0);
 
     long *Q    = (long *) malloc (NVer * sizeof(long)); //assert(Q != 0);
     long *Qtmp = (long *) malloc (NVer * sizeof(long)); //assert(Qtmp != 0);
@@ -6107,8 +6108,8 @@ int GraphColoring::D1_Coloring_OMP(){
 
             //long adj1 =(long) verPtr[v];
             //long adj2 =(long) verPtr[v+1];
-            int adj1 = verPtr[v];
-            int adj2 = verPtr[v+1];
+            EDGE_T adj1 = verPtr[v];
+            EDGE_T adj2 = verPtr[v+1];
             bool *Mark = (bool *) malloc ( MaxDegree * sizeof(bool) );
             //assert(Mark != 0);
             for (int i=0; i<MaxDegree; i++)
@@ -6117,7 +6118,7 @@ int GraphColoring::D1_Coloring_OMP(){
             int maxColor = -1;
             int adjColor = -1;
             //Browse the adjacency set of vertex v
-            for(int k = adj1; k < adj2; k++ ) {
+            for(EDGE_T k = adj1; k < adj2; k++ ) {
                 if ( v == verInd[k]) //Self-loops
                     continue;
                 adjColor =  vtxColor[verInd[k]];

@@ -12,6 +12,7 @@
 #include "mmio.h"
 #include <cmath>
 
+
 int WriteMatrixMarket_ADOLCInput(string s_postfix, int i_mode, ...) {
   unsigned int ** uip2_SparsityPattern;
   int i_Matrix_Row;
@@ -563,18 +564,19 @@ int buildDotWithoutColor(ColPack::GraphColoringInterface &g, vector<string> &Lis
     cout<<"Create File "<<fileName<<endl;
   }
 
-  vector<int> m_vi_Vertices, m_vi_Edges;
+  vector<ColPack::EDGE_T> m_vi_Vertices;
+  vector<ColPack::NODE_T> m_vi_Edges;
   g.GetVertices(m_vi_Vertices);
   g.GetEdges(m_vi_Edges);
-  int i_VertexCount = STEP_DOWN((signed) m_vi_Vertices.size());
+  ColPack::NODE_T i_VertexCount = STEP_DOWN((signed) m_vi_Vertices.size());
   string line="";
 
   //build header
   OutputStream<<"graph g {"<<endl;
 
   //build body
-  for(int i=0; i < i_VertexCount; i++) {
-    for(int j=m_vi_Vertices[i] ; j< m_vi_Vertices[i + 1]; j++) {
+  for(auto i=0; i < i_VertexCount; i++) {
+    for(auto j=m_vi_Vertices[i] ; j< m_vi_Vertices[i + 1]; j++) {
       if(m_vi_Edges[j]<=i) continue;
       line = "";
       line = line + "v"+itoa(i)+" -- v"+ itoa(m_vi_Edges[j]) +" ;";
@@ -601,19 +603,21 @@ int buildDotWithColor(ColPack::GraphColoringInterface &g, vector<string> &ListOf
     cout<<"Create File "<<fileName<<endl;
   }
 
-  vector<int> m_vi_Vertices, m_vi_Edges, m_vi_VertexColors;
+  vector<ColPack::EDGE_T> m_vi_Vertices;
+  vector<ColPack::NODE_T> m_vi_Edges;
+  vector<int> m_vi_VertexColors;
   g.GetVertices(m_vi_Vertices);
   g.GetEdges(m_vi_Edges);
   g.GetVertexColors(m_vi_VertexColors);
-  int i_VertexCount = STEP_DOWN((signed) m_vi_Vertices.size());
-  int i_NumberOfColors = ListOfColors.size();
+  ColPack::NODE_T i_VertexCount = STEP_DOWN((signed) m_vi_Vertices.size());
+  ColPack::NODE_T i_NumberOfColors = ListOfColors.size();
   string line="", color_str="", colorID_str="", colorID_str2="";
 
   //build header
   OutputStream<<"graph g {"<<endl;
 
   //build node colors
-  for(int i=0; i < i_VertexCount; i++) {
+  for(auto i=0; i < i_VertexCount; i++) {
     line="";
     if(m_vi_VertexColors[i] != _UNKNOWN) {
       color_str = ListOfColors[m_vi_VertexColors[i]%i_NumberOfColors];
@@ -642,7 +646,7 @@ int buildDotWithColor(ColPack::GraphColoringInterface &g, vector<string> &ListOf
 	int Vertex1 = ListOfConflicts[i][j];
 	int Vertex2 = ListOfConflicts[i][j+1];
 	if(Vertex1 > Vertex2) { //swap order
-	  for(int k=m_vi_Vertices[Vertex2]; k < m_vi_Vertices[Vertex2+1]; k++) {
+	  for(auto k=m_vi_Vertices[Vertex2]; k < m_vi_Vertices[Vertex2+1]; k++) {
 	    if(m_vi_Edges[k] == Vertex1) {
 	      m_vi_ConflictEdges[ k ]=true;
 	      break;
@@ -650,7 +654,7 @@ int buildDotWithColor(ColPack::GraphColoringInterface &g, vector<string> &ListOf
 	  }
 	}
 	else {
-	  for(int k=m_vi_Vertices[Vertex1]; k < m_vi_Vertices[Vertex1+1]; k++) {
+	  for(auto k=m_vi_Vertices[Vertex1]; k < m_vi_Vertices[Vertex1+1]; k++) {
 	    if(m_vi_Edges[k] == Vertex2) {
 	      m_vi_ConflictEdges[ k ]=true;
 	      break;
@@ -662,8 +666,8 @@ int buildDotWithColor(ColPack::GraphColoringInterface &g, vector<string> &ListOf
   }
 
   //build body
-  for(int i=0; i < i_VertexCount; i++) {
-    for(int j=m_vi_Vertices[i] ; j< m_vi_Vertices[i + 1]; j++) {
+  for(auto i=0; i < i_VertexCount; i++) {
+    for(auto j=m_vi_Vertices[i] ; j< m_vi_Vertices[i + 1]; j++) {
       if(m_vi_Edges[j]<=i) continue;
 
       if(m_vi_VertexColors[i] != _UNKNOWN) {

@@ -30,28 +30,28 @@ namespace ColPack
 	}
 
 	//Public Function 1103
-	int GraphCore::GetVertexCount()
+	NODE_T GraphCore::GetVertexCount()
 	{
 		return(STEP_DOWN(m_vi_Vertices.size()));
 	}
 
 
 	//Public Function 1104
-	int GraphCore::GetEdgeCount()
+	EDGE_T GraphCore::GetEdgeCount()
 	{
 		return(m_vi_Edges.size()/2);
 	}
 
 
 	//Public Function 1105
-	int GraphCore::GetMaximumVertexDegree()
+	NODE_T GraphCore::GetMaximumVertexDegree()
 	{
 		return(m_i_MaximumVertexDegree);
 	}
 
 
 	//Public Function 1106
-	int GraphCore::GetMinimumVertexDegree()
+	NODE_T GraphCore::GetMinimumVertexDegree()
 	{
 		return(m_i_MinimumVertexDegree);
 	}
@@ -71,21 +71,21 @@ namespace ColPack
 	}
 
 	//Public Function 1109
-	void GraphCore::GetVertices(vector<int> &output) const
+	void GraphCore::GetVertices(vector<EDGE_T> &output) const
 	{
 		output = (m_vi_Vertices);
 	}
 
 
 	//Public Function 1110
-	void GraphCore::GetEdges(vector<int> &output) const
+	void GraphCore::GetEdges(vector<NODE_T> &output) const
 	{
 		output = (m_vi_Edges);
 	}
 
 
 	//Public Function 1111
-	void GraphCore::GetValues(vector<double> &output) const
+	void GraphCore::GetValues(vector<VAL_T> &output) const
 	{
 		output = (m_vd_Values);
 	}
@@ -107,8 +107,8 @@ namespace ColPack
 		output = (m_ds_DisjointSets);
 	}
 
-	void GraphCore::GetD1Neighbor(int VertexIndex, vector<int> &D1Neighbor, int excludedVertex) {
-		if(VertexIndex > (int)m_vi_Vertices.size() - 2) {
+	void GraphCore::GetD1Neighbor(NODE_T VertexIndex, vector<NODE_T> &D1Neighbor, NODE_T excludedVertex) {
+		if(VertexIndex > (NODE_T) m_vi_Vertices.size() - 2) {
 			cout<<"Illegal request. VertexIndex is too large. VertexIndex > m_vi_Vertices.size() - 2"<<endl;
 			return;
 		}
@@ -117,15 +117,15 @@ namespace ColPack
 			return;
 		}
 		D1Neighbor.clear();
-		for(int i=m_vi_Vertices[VertexIndex]; i<m_vi_Vertices[STEP_UP(VertexIndex)]; i++) {
+		for(EDGE_T i=m_vi_Vertices[VertexIndex]; i<m_vi_Vertices[STEP_UP(VertexIndex)]; i++) {
 			if( excludedVertex == m_vi_Edges[i]) continue;
 			D1Neighbor.push_back(m_vi_Edges[i]);
 		}
 	}
 
 	///Print all the Distance-1 neighbors of VertexIndex, except the excludedVertex
-	void GraphCore::PrintVertexD1Neighbor(int VertexIndex, int excludedVertex) {
-		if(VertexIndex > (int)m_vi_Vertices.size() - 2) {
+	void GraphCore::PrintVertexD1Neighbor(NODE_T VertexIndex, NODE_T excludedVertex) {
+		if(VertexIndex > (NODE_T)m_vi_Vertices.size() - 2) {
 			cout<<"Illegal request. VertexIndex is too large. VertexIndex > m_vi_Vertices.size() - 2"<<endl;
 			return;
 		}
@@ -134,7 +134,7 @@ namespace ColPack
 			return;
 		}
 		cout<<"Distance-1 neighbors of "<<VertexIndex<<" are (0-based): ";
-		for(int i=m_vi_Vertices[VertexIndex]; i<m_vi_Vertices[STEP_UP(VertexIndex)]; i++) {
+		for(auto i=m_vi_Vertices[VertexIndex]; i<m_vi_Vertices[STEP_UP(VertexIndex)]; i++) {
 			if( excludedVertex == m_vi_Edges[i]) continue;
 			cout<<m_vi_Edges[i]<<" ";
 		}
@@ -142,9 +142,9 @@ namespace ColPack
 	}
 
 	/// Print all the Distance-2 neighbors of VertexIndex
-	void GraphCore::PrintVertexD2Neighbor(int VertexIndex) {
+	void GraphCore::PrintVertexD2Neighbor(NODE_T VertexIndex) {
 		cout<<"--Distance-1 neighbors of "<<VertexIndex<<" are: --------------------------"<<endl;
-		for(int i=m_vi_Vertices[VertexIndex]; i<m_vi_Vertices[STEP_UP(VertexIndex)]; i++) {
+		for(auto i=m_vi_Vertices[VertexIndex]; i<m_vi_Vertices[STEP_UP(VertexIndex)]; i++) {
 			PrintVertexD1Neighbor(m_vi_Edges[i], VertexIndex);
 		}
 		cout<<"----------------------------------------------------"<<endl;
@@ -157,20 +157,20 @@ namespace ColPack
 	- Intersect D1_of_VertexIndex1 and D1_of_VertexIndex2 to see which vertices VertexIndex1 and VertexIndex2 have in common. The result is stored in Intersect_set
 	- If the size of Intersect_set > 0 => VertexIndex1 and VertexIndex2 are Distance-2 neighbor
 	*/
-	bool GraphCore::AreD2Neighbor(int VertexIndex1, int VertexIndex2) {
-		set<int> D1_of_VertexIndex1, D1_of_VertexIndex2;
-		vector<int> Intersect_set;
+	bool GraphCore::AreD2Neighbor(NODE_T VertexIndex1, NODE_T VertexIndex2) {
+		set<NODE_T> D1_of_VertexIndex1, D1_of_VertexIndex2;
+		vector<NODE_T> Intersect_set;
 
-		for(int i=m_vi_Vertices[VertexIndex1]; i<m_vi_Vertices[STEP_UP(VertexIndex1)]; i++)
+		for(auto i=m_vi_Vertices[VertexIndex1]; i<m_vi_Vertices[STEP_UP(VertexIndex1)]; i++)
 			D1_of_VertexIndex1.insert(m_vi_Edges[i]);
-		for(int i=m_vi_Vertices[VertexIndex2]; i<m_vi_Vertices[STEP_UP(VertexIndex2)]; i++)
+		for(auto i=m_vi_Vertices[VertexIndex2]; i<m_vi_Vertices[STEP_UP(VertexIndex2)]; i++)
 			D1_of_VertexIndex2.insert(m_vi_Edges[i]);
 
 		Intersect_set.resize(D1_of_VertexIndex1.size(),-1);
 		set_intersection(D1_of_VertexIndex1.begin(), D1_of_VertexIndex1.end(),
 						D1_of_VertexIndex2.begin(), D1_of_VertexIndex2.end(),
 						Intersect_set.begin()	);
-		int size = Intersect_set.size();
+		NODE_T size = Intersect_set.size();
 		while(Intersect_set[size-1] == -1 && size >= 1) size--;
 		Intersect_set.resize(size,-1);
 
@@ -200,8 +200,9 @@ namespace ColPack
 		  return true;        // Yes, so the 2 objects are equal
 
 		//Compare vector<int> m_vi_Vertices; vector<int> m_vi_Edges; vector<double> m_vd_Values;
-		vector<int> other_Vertices, other_Edges;
-		vector<double> other_Values;
+		vector<EDGE_T> other_Vertices;
+		vector<NODE_T> other_Edges;
+		vector<VAL_T> other_Values;
 
 		other.GetVertices(other_Vertices);
 		other.GetEdges(other_Edges);
@@ -229,8 +230,9 @@ namespace ColPack
 		  return true;        // Yes, so the 2 objects are equal
 
 		//Compare vector<int> m_vi_Vertices; vector<int> m_vi_Edges; vector<double> m_vd_Values;
-		vector<int> other_Vertices, other_Edges;
-		vector<double> other_Values;
+		vector<EDGE_T> other_Vertices;
+		vector<NODE_T> other_Edges;
+		vector<VAL_T> other_Values;
 
 		other.GetVertices(other_Vertices);
 		other.GetEdges(other_Edges);

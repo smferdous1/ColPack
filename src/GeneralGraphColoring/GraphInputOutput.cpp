@@ -158,144 +158,145 @@ namespace ColPack
 
 
 	//Public Function 1257
-	int GraphInputOutput::ReadMatrixMarketAdjacencyGraph(string s_InputFile, bool b_getStructureOnly)
-	{
-		//Pause();
-		Clear();
-                if(!b_getStructureOnly) { 
-                    printf("Warning, you tried to read matrix market matrix with values. However since graph coloring does not using matrix values but structure. We neglect the values during the reading file.\n");  
-                    b_getStructureOnly=true;
-                }
+  int GraphInputOutput::ReadMatrixMarketAdjacencyGraph(string s_InputFile, bool b_getStructureOnly)
+  {
+    //Pause();
+    Clear();
+    if(!b_getStructureOnly) { 
+      printf("Warning, you tried to read matrix market matrix with values. However since graph coloring does not using matrix values but structure. We neglect the values during the reading file.\n");  
+      b_getStructureOnly=true;
+    }
 
-		m_s_InputFile=s_InputFile;
+    m_s_InputFile=s_InputFile;
 
-		//initialize local data
-		int col=0, row=0, rowIndex=0, colIndex=0;
-		int entry_counter = 0, num_of_entries = 0;
-		//bool value_not_specified = false; //unused variable
-		//int num=0, numCount=0;
-		bool b_symmetric;
-		istringstream in2;
-		string line="";
-		map<int,vector<int> > nodeList;
-		map<int,vector<double> > valueList;
+    //initialize local data
+    NODE_T col=0, row=0, rowIndex=0, colIndex=0;
+    EDGE_T entry_counter = 0, num_of_entries = 0;
+    //bool value_not_specified = false; //unused variable
+    //int num=0, numCount=0;
+    bool b_symmetric;
+    istringstream in2;
+    string line="";
+    map<NODE_T,vector<NODE_T> > nodeList;
+    //SMF: we do not need valueList. Right?
+    //map<EDGE_T,vector<VAL_T> > valueList;
 
-		//READ IN BANNER
-		MM_typecode matcode;
-		FILE *f;
-		if ((f = fopen(m_s_InputFile.c_str(), "r")) == NULL)  {
-		  cout<<m_s_InputFile<<" not Found!"<<endl;
-		  exit(1);
-		}
-		//else cout<<"Found file "<<m_s_InputFile<<endl;
+    //READ IN BANNER
+    MM_typecode matcode;
+    FILE *f;
+    if ((f = fopen(m_s_InputFile.c_str(), "r")) == NULL)  {
+      cout<<m_s_InputFile<<" not Found!"<<endl;
+      exit(1);
+    }
+    //else cout<<"Found file "<<m_s_InputFile<<endl;
 
-		if (mm_read_banner(f, &matcode) != 0)
-		{
-		    printf("Could not process Matrix Market banner.\n");
-		    exit(1);
-		}
+    if (mm_read_banner(f, &matcode) != 0)
+    {
+      printf("Could not process Matrix Market banner.\n");
+      exit(1);
+    }
 
-                
-                if( !mm_is_coordinate(matcode) ){
-		  printf("Sorry, %s is dense, this application only not support sparse.\n", m_s_InputFile.c_str());
-		  exit(-1);
-                }
 
- 		if( mm_is_symmetric(matcode) || mm_is_skew(matcode) || mm_is_hermitian(matcode) ) 
-		    b_symmetric = true;
-		else 
-                    b_symmetric = false;
-                
-                fclose(f);  //mm_read_mtx_crd_size(f, &row, &col, &num_of_entries);  //FILE sys is kind of old.
+    if( !mm_is_coordinate(matcode) ){
+      printf("Sorry, %s is dense, this application only not support sparse.\n", m_s_InputFile.c_str());
+      exit(-1);
+    }
 
-		ifstream in (m_s_InputFile.c_str());
-                if(!in) { printf("cannot open %s",m_s_InputFile.c_str()); exit(1); }
+    if( mm_is_symmetric(matcode) || mm_is_skew(matcode) || mm_is_hermitian(matcode) ) 
+      b_symmetric = true;
+    else 
+      b_symmetric = false;
 
-                do{
-		    getline(in,line);
-                }while(line.size()>0 && line[0]=='%');
+    fclose(f);  //mm_read_mtx_crd_size(f, &row, &col, &num_of_entries);  //FILE sys is kind of old.
 
-		in2.str(line);
-		in2>>row>>col>>num_of_entries;
+    ifstream in (m_s_InputFile.c_str());
+    if(!in) { printf("cannot open %s",m_s_InputFile.c_str()); exit(1); }
 
-		//if(row!=col) {
-		//	cout<<"* WARNING: GraphInputOutput::ReadMatrixMarketAdjacencyGraph()"<<endl;
-		//	cout<<"*\t row!=col. This is not a square matrix. Can't process."<<endl;
-		//	return _FALSE;
-		//}
+    do{
+      getline(in,line);
+    }while(line.size()>0 && line[0]=='%');
 
-		// DONE - FIND OUT THE SIZE OF THE MATRIX
-                
-                if(b_symmetric){
-                    do{
-		        getline(in,line);
-                        if(line.empty() || line[0]=='%') 
-                            continue;
-		        entry_counter++;
-                        in2.clear();
-                        in2.str(line);
-                        in2>>rowIndex>>colIndex;
-                        
-                        if(rowIndex==colIndex) continue;
-                        rowIndex--;  //to 0 base
-                        colIndex--;  //to 0 base
-                        if(rowIndex<colIndex) { 
-                            printf("Error find a entry in symmetric matrix %s upper part. row %d col %d"
-                                    ,m_s_InputFile.c_str(), rowIndex+1, colIndex+1); 
-                            exit(1); 
-                        } 
-                        nodeList[rowIndex].push_back(colIndex);
-                        nodeList[colIndex].push_back(rowIndex);
-                    }while(!in.eof() && entry_counter<num_of_entries);
-                }//end of if b_symmetric
-                else{
-                    // if the graph is non symmetric, this matrix represent a directed graph
-                    // We force directed graph to become un-directed graph by adding the 
-                    // corresponding edge. This may leads to duplicate edges problem.
-                    // we then later sort and unique the duplicated edges.
-                    do{
-		        getline(in,line);
-                        if(line.empty() || line[0]=='%') 
-                            continue;
-		        entry_counter++;
-                        in2.clear();
-                        in2.str(line);
-                        in2>>rowIndex>>colIndex;
-                        
-                        if(rowIndex==colIndex) continue;
-                        rowIndex--;  //to 0 base
-                        colIndex--;  //to 0 base
-                        nodeList[rowIndex].push_back(colIndex);
-                        nodeList[colIndex].push_back(rowIndex);
-                    }while(!in.eof() && entry_counter<num_of_entries);
-                    
-                    for(auto &piv : nodeList){
-                        vector<int>& vec = piv.second;
-                        sort(vec.begin(), vec.end());
-                        vec.erase( unique(vec.begin(), vec.end()), vec.end());
-                    }
-                    row=col=max(row,col);
+    in2.str(line);
+    in2>>row>>col>>num_of_entries;
 
-                }
+    //if(row!=col) {
+    //	cout<<"* WARNING: GraphInputOutput::ReadMatrixMarketAdjacencyGraph()"<<endl;
+    //	cout<<"*\t row!=col. This is not a square matrix. Can't process."<<endl;
+    //	return _FALSE;
+    //}
 
-		if(entry_counter<num_of_entries) { //entry_counter should be == num_of_entries
-			fprintf(stderr,"Error: GraphInputOutput::ReadMatrixMarketAdjacencyGraph()\n");
-                        fprintf(stderr,"       Tries to read matrix %s\n",m_s_InputFile.c_str());
-                        fprintf(stderr,"       entry_counter %d < expected_entries %d\n",entry_counter, num_of_entries);
-                        fprintf(stderr,"       This may caused by trancate of the matrix file\n");
-		        exit(1);
-		}
+    // DONE - FIND OUT THE SIZE OF THE MATRIX
 
-		//now construct the graph
-		m_vi_Vertices.push_back(m_vi_Edges.size()); //m_vi_Edges.size() == 0 at this point
-		for(int i=0;i<row; i++) {
-			m_vi_Edges.insert(m_vi_Edges.end(),nodeList[i].begin(),nodeList[i].end());
-			m_vi_Vertices.push_back(m_vi_Edges.size());
-		}
-		
-                CalculateVertexDegrees();
-                return(_TRUE);
-	}
+    if(b_symmetric){
+      do{
+        getline(in,line);
+        if(line.empty() || line[0]=='%') 
+          continue;
+        entry_counter++;
+        in2.clear();
+        in2.str(line);
+        in2>>rowIndex>>colIndex;
+
+        if(rowIndex==colIndex) continue;
+        rowIndex--;  //to 0 base
+        colIndex--;  //to 0 base
+        if(rowIndex<colIndex) { 
+          printf("Error find a entry in symmetric matrix %s upper part. row %d col %d"
+              ,m_s_InputFile.c_str(), rowIndex+1, colIndex+1); 
+          exit(1); 
+        } 
+        nodeList[rowIndex].push_back(colIndex);
+        nodeList[colIndex].push_back(rowIndex);
+      }while(!in.eof() && entry_counter<num_of_entries);
+    }//end of if b_symmetric
+    else{
+      // if the graph is non symmetric, this matrix represent a directed graph
+      // We force directed graph to become un-directed graph by adding the 
+      // corresponding edge. This may leads to duplicate edges problem.
+      // we then later sort and unique the duplicated edges.
+      do{
+        getline(in,line);
+        if(line.empty() || line[0]=='%') 
+          continue;
+        entry_counter++;
+        in2.clear();
+        in2.str(line);
+        in2>>rowIndex>>colIndex;
+
+        if(rowIndex==colIndex) continue;
+        rowIndex--;  //to 0 base
+        colIndex--;  //to 0 base
+        nodeList[rowIndex].push_back(colIndex);
+        nodeList[colIndex].push_back(rowIndex);
+      }while(!in.eof() && entry_counter<num_of_entries);
+
+      for(auto &piv : nodeList){
+        vector<NODE_T>& vec = piv.second;
+        sort(vec.begin(), vec.end());
+        vec.erase( unique(vec.begin(), vec.end()), vec.end());
+      }
+      row=col=max(row,col);
+
+    }
+
+    if(entry_counter<num_of_entries) { //entry_counter should be == num_of_entries
+      fprintf(stderr,"Error: GraphInputOutput::ReadMatrixMarketAdjacencyGraph()\n");
+      fprintf(stderr,"       Tries to read matrix %s\n",m_s_InputFile.c_str());
+      fprintf(stderr,"       entry_counter %d < expected_entries %d\n",entry_counter, num_of_entries);
+      fprintf(stderr,"       This may caused by trancate of the matrix file\n");
+      exit(1);
+    }
+
+    //now construct the graph
+    m_vi_Vertices.push_back(m_vi_Edges.size()); //m_vi_Edges.size() == 0 at this point
+    for(NODE_T i=0;i<row; i++) {
+      m_vi_Edges.insert(m_vi_Edges.end(),nodeList[i].begin(),nodeList[i].end());
+      m_vi_Vertices.push_back(m_vi_Edges.size());
+    }
+
+    CalculateVertexDegrees();
+    return(_TRUE);
+  }
 
 
 	int GraphInputOutput::ReadHarwellBoeingAdjacencyGraph(string s_InputFile) {
